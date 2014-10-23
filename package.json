@@ -1,0 +1,30 @@
+{
+  "name": "ormy",
+  "version": "0.0.0",
+  "description": "",
+  "main": "ormy.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DubFriend/ormy.git"
+  },
+  "author": "Brian Detering <BDeterin@gmail.com> (http://www.briandetering.net/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/DubFriend/ormy/issues"
+  },
+  "homepage": "https://github.com/DubFriend/ormy",
+  "dependencies": {
+    "mysql": "^2.5.1",
+    "mysql-wrap": "^0.3.0",
+    "q": "^1.0.1",
+    "underscore": "^1.7.0"
+  },
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-contrib-nodeunit": "^0.4.1",
+    "grunt-contrib-watch": "^0.6.1"
+  }
+}
