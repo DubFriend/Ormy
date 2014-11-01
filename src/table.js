@@ -1,15 +1,22 @@
 module.exports = function (ormy, hidden) {
     return function (tableName) {
         var table = {};
-        var hasMany = {};
+        // var hasMany = {};
         var primaryKey;
 
         table.name = function () {
             return tableName;
         };
 
-        table.hasMany = function (tableName, thisTableKey, otherTableKey) {
-            hasMany[tableName] = { key: thisTableKey, on: otherTableKey };
+        table.hasMany = function (methodName, tableName, foreignKey, localKey) {
+            table[methodName] = function () {
+                return hidden.createQuery()
+            };
+            // hidden.tables[table];
+            // return table;
+        };
+
+        table.with = function () {
             return table;
         };
 

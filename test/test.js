@@ -69,20 +69,32 @@ exports.find = function (test) {
 exports.where = function (test) {
     test.expect(1);
     this.ormy('student')
-        .primaryKey('id')
-        .where('name = ?', ['Mary'])
-        .get().then(function (students) {
-            test.deepEqual(students, [{ id: 2, name: 'Mary' }]);
-            test.done();
-        }).done();
+    .primaryKey('id')
+    .where('name = ?', ['Mary'])
+    .get().then(function (students) {
+        test.deepEqual(students, [{ id: 2, name: 'Mary' }]);
+        test.done();
+    }).done();
 };
 
-// exports.hasMany = function (test) {
-//     this.ormy
-//         .table('student')
-//         .primaryKey('id')
-//         .hasMany('enrollment', 'id', 'studentID')
-//         .;
-
-//     test.done();
-// };
+exports.hasMany = function (test) {
+    test.expect(1);
+    this.ormy('student')
+    .primaryKey('id')
+    .hasMany('enrollments', 'enrollment', 'studentID', 'id')
+    // .hasMany(function () {
+    //     return this.hasMany('enrollment', 'studentID', 'id');
+    // })
+    .with('enrollments')
+    .find(1).get().then(function (student) {
+        test.deepEqual(student, {
+            id: 1,
+            name: 'Bob',
+            enrollments: [
+                { courseID: 1, studentID: 1 },
+                { courseID: 2, studentID: 1 }
+            ]
+        })
+        test.done();
+    }).done();
+};

@@ -26,6 +26,9 @@ module.exports = function (fig) {
     hidden.createResults = createResults(ormy, hidden);
     hidden.createTable = createTable(ormy, hidden);
     hidden.createQuery = createQuery(ormy, hidden);
+    // hidden.getTable = function (tableName) {
+
+    // };
 
     return ormy;
 };
