@@ -33,14 +33,9 @@ module.exports = function (ormy, hidden) {
                 joins.push(fig);
             };
 
-            self.query = function () {
-                // var whereString = (_.pluck(wheres, 'query')).join(' AND ');
-                // return whereString ? ' WHERE ' + whereString : ' ';
-            };
+            self.query = function () {};
 
-            self.values = function () {
-                // return _.flatten(_.pluck(wheres, 'values'));
-            };
+            self.values = function () {};
 
             return self;
         }());
@@ -59,13 +54,14 @@ module.exports = function (ormy, hidden) {
         };
 
         query.get = function () {
-
-            console.log('SELECT * FROM ' + table.name() + wheres.query(), wheres.values());
-
-            return ormy.query(
-                'SELECT * FROM ' + table.name() + wheres.query(),
-                wheres.values()
-            );
+            return hidden.createResults({
+                table: table,
+                relationships: fig.relationships,
+                resultsPromise: ormy.query(
+                    'SELECT * FROM ' + table.name() + wheres.query(),
+                    wheres.values()
+                )
+            });
         };
 
         return query;

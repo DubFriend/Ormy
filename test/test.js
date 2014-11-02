@@ -101,9 +101,6 @@ exports.hasMany = function (test) {
     .find(1).then(function (results) {
         return this.enrollments();
     })
-    .then(function (enrollments) {
-        return enrollments.get();
-    })
     .then(function (rows) {
         test.deepEqual(rows, [
             { courseID: 1, studentID: 1 },
@@ -111,24 +108,4 @@ exports.hasMany = function (test) {
         ]);
         test.done();
     }).done();
-
-    // .get().then(function (enrollments) {
-    //     test.deepEqual(enrollments, [
-    //         { courseID: 1, studentID: 1 },
-    //         { courseID: 2, studentID: 1 }
-    //     ]);
-    //     test.done();
-    // }).done();
-    // .with('enrollments')
-    // .find(1).get().then(function (student) {
-    //     test.deepEqual(student, {
-    //         id: 1,
-    //         name: 'Bob',
-    //         enrollments: [
-    //             { courseID: 1, studentID: 1 },
-    //             { courseID: 2, studentID: 1 }
-    //         ]
-    //     });
-    //     test.done();
-    // }).done();
 };

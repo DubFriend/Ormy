@@ -7,10 +7,6 @@ module.exports = function (ormy, hidden) {
 	    var table = fig.table;
 	    var resultData = null;
 
-	    // results.get = function () {
-	    // 	return resultData ? Q(resultData) : fig.resultsPromise;
-	    // };
-
 	    results.then = function (callback) {
 	    	if(resultData) {
 	    		return Q(callback.call(results, resultData));
@@ -38,7 +34,7 @@ module.exports = function (ormy, hidden) {
 	    				return relationship.foreignKey + ' = ?';
 	    			}).join(' OR '),
 	    			_.pluck(rows, relationship.localKey)
-	    		);
+	    		).get();
 	    	};
 	    });
 
