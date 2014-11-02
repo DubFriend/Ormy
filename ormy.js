@@ -1,6 +1,5 @@
 var _ = require('underscore');
 var mysqlWrap = require('mysql-wrap');
-
 var createResults = require('./src/results');
 var createQuery = require('./src/query');
 var createTable = require('./src/table');
@@ -9,10 +8,7 @@ module.exports = function (fig) {
     'use strict';
 
     var ormy = function (tableName) {
-        if(!hidden.tables[tableName]) {
-            hidden.tables[tableName] = hidden.createTable(tableName);
-        }
-        return hidden.tables[tableName];
+        return hidden.getTable(tableName);
     };
 
     var db = mysqlWrap(require('mysql').createConnection(fig.connection));
@@ -22,13 +18,16 @@ module.exports = function (fig) {
     });
 
     var hidden = {};
-    hidden.tables = {};
+    var tables = {};
     hidden.createResults = createResults(ormy, hidden);
     hidden.createTable = createTable(ormy, hidden);
     hidden.createQuery = createQuery(ormy, hidden);
-    // hidden.getTable = function (tableName) {
-
-    // };
+    hidden.getTable = function (tableName) {
+        if(!tables[tableName]) {
+            tables[tableName] = hidden.createTable(tableName);
+        }
+        return tables[tableName];
+    };
 
     return ormy;
 };

@@ -60,13 +60,13 @@ exports.query = function (test) {
 
 exports.find = function (test) {
     test.expect(1);
-    this.ormy('student').primaryKey('id').find(1).get().then(function (student) {
+    this.ormy('student').primaryKey('id').find(1).then(function (student) {
         test.deepEqual(student, { id: 1, name: 'Bob' });
         test.done();
-    });
+    }).done();
 };
 
-exports.where = function (test) {
+exports.whereFromTableObjectPassArray = function (test) {
     test.expect(1);
     this.ormy('student')
     .primaryKey('id')
@@ -77,24 +77,58 @@ exports.where = function (test) {
     }).done();
 };
 
+exports.whereFromTableObjectPassArguments = function (test) {
+    test.expect(1);
+    this.ormy('student')
+    .primaryKey('id')
+    .where('name = ?', 'Mary')
+    .get().then(function (students) {
+        test.deepEqual(students, [{ id: 2, name: 'Mary' }]);
+        test.done();
+    }).done();
+};
+
 exports.hasMany = function (test) {
     test.expect(1);
     this.ormy('student')
     .primaryKey('id')
-    .hasMany('enrollments', 'enrollment', 'studentID', 'id')
-    // .hasMany(function () {
-    //     return this.hasMany('enrollment', 'studentID', 'id');
-    // })
-    .with('enrollments')
-    .find(1).get().then(function (student) {
-        test.deepEqual(student, {
-            id: 1,
-            name: 'Bob',
-            enrollments: [
-                { courseID: 1, studentID: 1 },
-                { courseID: 2, studentID: 1 }
-            ]
-        })
+    .hasMany({
+        methodName: 'enrollments',
+        tableName: 'enrollment',
+        foreignKey: 'studentID',
+        localKey: 'id'
+    })
+    .find(1).then(function (results) {
+        return this.enrollments();
+    })
+    .then(function (enrollments) {
+        return enrollments.get();
+    })
+    .then(function (rows) {
+        test.deepEqual(rows, [
+            { courseID: 1, studentID: 1 },
+            { courseID: 2, studentID: 1 }
+        ]);
         test.done();
     }).done();
+
+    // .get().then(function (enrollments) {
+    //     test.deepEqual(enrollments, [
+    //         { courseID: 1, studentID: 1 },
+    //         { courseID: 2, studentID: 1 }
+    //     ]);
+    //     test.done();
+    // }).done();
+    // .with('enrollments')
+    // .find(1).get().then(function (student) {
+    //     test.deepEqual(student, {
+    //         id: 1,
+    //         name: 'Bob',
+    //         enrollments: [
+    //             { courseID: 1, studentID: 1 },
+    //             { courseID: 2, studentID: 1 }
+    //         ]
+    //     });
+    //     test.done();
+    // }).done();
 };
