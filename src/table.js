@@ -12,28 +12,46 @@ module.exports = function (ormy, hidden) {
         };
 
         table.hasMany = function (fig) {
-            table[fig.methodName] = function () {
-                return hidden.createQuery({
-                    table: table,
-                    relationships: relationships
-                })
-                .leftJoin({
-                    table: hidden.getTable(fig.tableName),
-                    foreignKey: fig.foreignKey || table.name() + '_' + primaryKey,
-                    localKey: fig.localKey || primaryKey
-                });
-            };
+            fig.joinType = 'left';
             relationships[fig.methodName] = fig;
             return table;
         };
 
-        table.with = function () {
-            return table;
+        table.with = function (methodNames) {
+            var methodNames = _.isArray(methodNames) ? methodNames : _.toArray(arguments);
+
+            var query = hidden.createQuery({
+                table: table,
+                relationships: relationships
+            });
+
+            _.each(methodNames, function (methodName) {
+                var relation = relationships[methodName];
+                switch(relation.joinType) {
+                    case 'left':
+                        query.leftJoin({
+                            resultsName: relation.methodName,
+                            table: hidden.getTable(relation.tableName),
+                            foreignKey: relation.foreignKey || table.name() + '_' + primaryKey,
+                            localKey: relation.localKey || primaryKey
+                        });
+                        break;
+                    default:
+                        throw 'Unsupported joinType: ' + relation.joinType;
+                }
+            });
+
+            return query;
         };
 
         table.primaryKey = function (keyName) {
-            primaryKey = keyName;
-            return table;
+            if(keyName) {
+                primaryKey = keyName;
+                return table;
+            }
+            else {
+                return primaryKey;
+            }
         };
 
         table.find = function (id) {

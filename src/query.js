@@ -1,4 +1,6 @@
 var _ = require('underscore');
+var Q = require('q');
+
 module.exports = function (ormy, hidden) {
     'use strict';
     return function (fig) {
@@ -33,9 +35,26 @@ module.exports = function (ormy, hidden) {
                 joins.push(fig);
             };
 
-            self.query = function () {};
-
-            self.values = function () {};
+            self.getAll = function (result) {
+                return Q.all(_.map(joins, function (join) {
+                    return ormy.query(
+                        'SELECT * FROM ' + join.table.name() +
+                        ' WHERE ' + join.foreignKey + ' = ?',
+                        [result[join.localKey]]
+                    ).then(function (joinResult) {
+                        return {
+                            name: join.resultsName,
+                            data: joinResult
+                        };
+                    });
+                })).then(function (joinResults) {
+                    var unpacked = {};
+                    _.each(joinResults, function (result) {
+                        unpacked[result.name] = result.data;
+                    });
+                    return unpacked;
+                });
+            };
 
             return self;
         }());
@@ -53,14 +72,30 @@ module.exports = function (ormy, hidden) {
             return query;
         };
 
+        query.find = function (id) {
+            wheres.add(table.primaryKey() + ' = ?', id);
+            return query.get().then(function (results) {
+                return _.first(results);
+            });
+        };
+
         query.get = function () {
             return hidden.createResults({
                 table: table,
                 relationships: fig.relationships,
                 resultsPromise: ormy.query(
-                    'SELECT * FROM ' + table.name() + wheres.query(),
+                    'SELECT * FROM ' +
+                    table.name() +
+                    wheres.query(),
                     wheres.values()
-                )
+                ).then(function (results) {
+                    // TODO: REDUCE QUERIES BY GROUPING 1 PER TABLE
+                    return Q.all(_.map(results, function (result) {
+                        return leftJoins.getAll(result).then(function (joinResults) {
+                            return _.extend(result, joinResults);
+                        });
+                    }));
+                })
             });
         };
 

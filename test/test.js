@@ -109,3 +109,26 @@ exports.hasMany = function (test) {
         test.done();
     }).done();
 };
+
+exports.withHasMany = function (test) {
+    test.expect(1);
+    this.ormy('student')
+    .primaryKey('id')
+    .hasMany({
+        methodName: 'enrollments',
+        tableName: 'enrollment',
+        foreignKey: 'studentID',
+        localKey: 'id'
+    })
+    .with('enrollments').find(1).then(function (student) {
+        test.deepEqual(student, {
+            id: 1,
+            name: 'Bob',
+            enrollments: [
+                { courseID: 1, studentID: 1 },
+                { courseID: 2, studentID: 1 }
+            ]
+        });
+        test.done();
+    }).done();
+};
