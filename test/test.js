@@ -8,7 +8,8 @@ var connection = {
 var sql = require('mysql-wrap')(require('mysql').createConnection(connection));
 
 exports.setUp = function (done) {
-    this.ormy = require('../ormy')({ connection: connection });
+    var that = this;
+    that.ormy = require('../ormy')({ connection: connection });
 
     sql.query('SET FOREIGN_KEY_CHECKS = 0')
     .then(function () {
@@ -43,6 +44,20 @@ exports.setUp = function (done) {
         ]);
     })
     .then(function () {
+        that.student = that.ormy('student').primaryKey('id').hasMany({
+            methodName: 'enrollments',
+            tableName: 'enrollment',
+            foreignKey: 'studentID',
+            localKey: 'id'
+        });
+
+        that.enrollment = that.ormy('enrollment').hasOne({
+            methodName: 'student',
+            tableName: 'student',
+            foreignKey: 'id',
+            localKey: 'studentID'
+        });
+
         done();
     })
     .done();
@@ -60,7 +75,7 @@ exports.query = function (test) {
 
 exports.find = function (test) {
     test.expect(1);
-    this.ormy('student').primaryKey('id').find(1).then(function (student) {
+    this.student.find(1).then(function (student) {
         test.deepEqual(student, { id: 1, name: 'Bob' });
         test.done();
     }).done();
@@ -68,7 +83,7 @@ exports.find = function (test) {
 
 exports.all = function (test) {
     test.expect(1);
-    this.ormy('student').all().then(function (students) {
+    this.student.all().then(function (students) {
         test.deepEqual(students, [
             { id: 1, name: 'Bob' },
             { id: 2, name: 'Mary' }
@@ -79,10 +94,8 @@ exports.all = function (test) {
 
 exports.whereFromTableObjectPassArray = function (test) {
     test.expect(1);
-    this.ormy('student')
-    .primaryKey('id')
-    .where('name = ?', ['Mary'])
-    .get().then(function (students) {
+    this.student.where('name = ?', ['Mary']).get()
+    .then(function (students) {
         test.deepEqual(students, [{ id: 2, name: 'Mary' }]);
         test.done();
     }).done();
@@ -90,10 +103,8 @@ exports.whereFromTableObjectPassArray = function (test) {
 
 exports.whereFromTableObjectPassArguments = function (test) {
     test.expect(1);
-    this.ormy('student')
-    .primaryKey('id')
-    .where('name = ?', 'Mary')
-    .get().then(function (students) {
+    this.student.where('name = ?', 'Mary').get()
+    .then(function (students) {
         test.deepEqual(students, [{ id: 2, name: 'Mary' }]);
         test.done();
     }).done();
@@ -101,15 +112,7 @@ exports.whereFromTableObjectPassArguments = function (test) {
 
 exports.hasMany = function (test) {
     test.expect(1);
-    this.ormy('student')
-    .primaryKey('id')
-    .hasMany({
-        methodName: 'enrollments',
-        tableName: 'enrollment',
-        foreignKey: 'studentID',
-        localKey: 'id'
-    })
-    .find(1).then(function (results) {
+    this.student.find(1).then(function (results) {
         return this.enrollments();
     })
     .then(function (rows) {
@@ -123,15 +126,7 @@ exports.hasMany = function (test) {
 
 exports.withHasMany = function (test) {
     test.expect(1);
-    this.ormy('student')
-    .primaryKey('id')
-    .hasMany({
-        methodName: 'enrollments',
-        tableName: 'enrollment',
-        foreignKey: 'studentID',
-        localKey: 'id'
-    })
-    .with('enrollments').find(1).then(function (student) {
+    this.student.with('enrollments').find(1).then(function (student) {
         test.deepEqual(student, {
             id: 1,
             name: 'Bob',
@@ -146,15 +141,7 @@ exports.withHasMany = function (test) {
 
 exports.withHasManyUsingAll = function (test) {
     test.expect(1);
-    this.ormy('student')
-    .primaryKey('id')
-    .hasMany({
-        methodName: 'enrollments',
-        tableName: 'enrollment',
-        foreignKey: 'studentID',
-        localKey: 'id'
-    })
-    .with('enrollments').all().then(function (students) {
+    this.student.with('enrollments').all().then(function (students) {
         test.deepEqual(students, [
             {
                 id: 1,
@@ -170,6 +157,42 @@ exports.withHasManyUsingAll = function (test) {
                 enrollments: [
                     { courseID: 1, studentID: 2 }
                 ]
+            }
+        ]);
+        test.done();
+    }).done();
+};
+
+exports.hasOne = function (test) {
+    test.expect(1);
+    this.enrollment.where('studentID =  ?', 1).get().then(function (results) {
+        return this.student();
+    }).then(function (student) {
+        test.deepEqual(student, [{ id: 1, name: 'Bob' }]);
+        test.done();
+    }).done();
+};
+
+exports.hasOneWith = function (test) {
+    test.expect(1);
+    this.enrollment.with('student').where('studentID = ?', 1).get()
+    .then(function (results) {
+        test.deepEqual(results, [
+            {
+                courseID: 1,
+                studentID: 1,
+                student: {
+                    id: 1,
+                    name: 'Bob'
+                }
+            },
+            {
+                courseID: 2,
+                studentID: 1,
+                student: {
+                    id: 1,
+                    name: 'Bob'
+                }
             }
         ]);
         test.done();

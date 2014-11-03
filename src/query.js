@@ -56,25 +56,6 @@ module.exports = function (ormy, hidden) {
                 );
             };
 
-            // self.getAll = function (result) {
-            //     return Q.all(_.map(joins, function (join) {
-            //         return self.get(join.resultsName, result)
-            //         .then(function(results) {
-            //             return {
-            //                 name: join.resultsName,
-            //                 data: results
-            //             };
-            //         });
-            //     }))
-            //     .then(function (joinResults) {
-            //         var unpacked = {};
-            //         _.each(joinResults, function (result) {
-            //             unpacked[result.name] = result.data;
-            //         });
-            //         return unpacked;
-            //     });
-            // };
-
             return self;
         }());
 
@@ -87,6 +68,13 @@ module.exports = function (ormy, hidden) {
         };
 
         query.leftJoin = function (fig) {
+            fig.joinType = 'leftJoin';
+            leftJoins.add(fig);
+            return query;
+        };
+
+        query.hasOne = function (fig) {
+            fig.joinType = 'hasOne';
             leftJoins.add(fig);
             return query;
         };
@@ -100,10 +88,14 @@ module.exports = function (ormy, hidden) {
 
         query.all = function () {
             return query.get();
-
         };
 
         query.get = function () {
+            // console.log('SELECT * FROM ' +
+            //         table.name() +
+            //         wheres.query(),
+            //         wheres.values());
+
             return hidden.createResults({
                 table: table,
                 relationships: fig.relationships,
@@ -130,7 +122,9 @@ module.exports = function (ormy, hidden) {
                                     );
 
                                     if(!_.isEmpty(matches)) {
-                                        results[index][join.resultsName] = matches;
+
+                                        results[index][join.resultsName] =
+                                            join.joinType === 'hasOne' ? _.first(matches) : matches;
                                     }
                                 });
                             });

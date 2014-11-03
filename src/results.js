@@ -25,15 +25,18 @@ module.exports = function (ormy, hidden) {
 	    			throw new Error('Must have allready loaded results');
 	    		}
 
-	    		var rows = _.isArray(resultData) ? resultData : [resultData];
+	    		var uniqueKeys = _.unique(_.pluck(
+	    			_.isArray(resultData) ? resultData : [resultData],
+	    			relationship.localKey)
+	    		);
 
 	    		return hidden.createQuery({
 	    			table: hidden.getTable(relationship.tableName)
 	    		}).where(
-	    			_.map(rows, function (row) {
+	    			_.map(uniqueKeys, function (row) {
 	    				return relationship.foreignKey + ' = ?';
-	    			}).join(' OR '),
-	    			_.pluck(rows, relationship.localKey)
+	    			}),
+	    			uniqueKeys
 	    		).get();
 	    	};
 	    });

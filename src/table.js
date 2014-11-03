@@ -17,6 +17,12 @@ module.exports = function (ormy, hidden) {
             return table;
         };
 
+        table.hasOne = function (fig) {
+            fig.joinType = 'hasOne';
+            relationships[fig.methodName] = fig;
+            return table;
+        };
+
         table.with = function (methodNames) {
             var methodNames = _.isArray(methodNames) ?
                 methodNames : _.toArray(arguments);
@@ -36,6 +42,14 @@ module.exports = function (ormy, hidden) {
                             foreignKey: relation.foreignKey ||
                                         table.name() + '_' + primaryKey,
                             localKey: relation.localKey || primaryKey
+                        });
+                        break;
+                    case 'hasOne':
+                        query.hasOne({
+                            resultsName: relation.methodName,
+                            table: hidden.getTable(relation.tableName),
+                            foreignKey: relation.foreignKey,
+                            localKey: relation.localKey
                         });
                         break;
                     default:
