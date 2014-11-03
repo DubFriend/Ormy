@@ -18,7 +18,8 @@ module.exports = function (ormy, hidden) {
         };
 
         table.with = function (methodNames) {
-            var methodNames = _.isArray(methodNames) ? methodNames : _.toArray(arguments);
+            var methodNames = _.isArray(methodNames) ?
+                methodNames : _.toArray(arguments);
 
             var query = hidden.createQuery({
                 table: table,
@@ -32,7 +33,8 @@ module.exports = function (ormy, hidden) {
                         query.leftJoin({
                             resultsName: relation.methodName,
                             table: hidden.getTable(relation.tableName),
-                            foreignKey: relation.foreignKey || table.name() + '_' + primaryKey,
+                            foreignKey: relation.foreignKey ||
+                                        table.name() + '_' + primaryKey,
                             localKey: relation.localKey || primaryKey
                         });
                         break;
@@ -61,6 +63,14 @@ module.exports = function (ormy, hidden) {
                 resultsPromise: ormy.selectOne(
                     tableName, _.object([primaryKey], [id])
                 )
+            });
+        };
+
+        table.all = function () {
+            return hidden.createResults({
+                table: table,
+                relationships: relationships,
+                resultsPromise: ormy.select(tableName)
             });
         };
 

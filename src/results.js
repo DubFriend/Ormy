@@ -22,7 +22,7 @@ module.exports = function (ormy, hidden) {
 	    _.each(fig.relationships, function (relationship, name) {
 	    	results[name] = function () {
 	    		if(!resultData) {
-	    			throw 'Must have allready loaded results';
+	    			throw new Error('Must have allready loaded results');
 	    		}
 
 	    		var rows = _.isArray(resultData) ? resultData : [resultData];

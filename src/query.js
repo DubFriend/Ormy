@@ -35,26 +35,45 @@ module.exports = function (ormy, hidden) {
                 joins.push(fig);
             };
 
-            self.getAll = function (result) {
-                return Q.all(_.map(joins, function (join) {
-                    return ormy.query(
-                        'SELECT * FROM ' + join.table.name() +
-                        ' WHERE ' + join.foreignKey + ' = ?',
-                        [result[join.localKey]]
-                    ).then(function (joinResult) {
-                        return {
-                            name: join.resultsName,
-                            data: joinResult
-                        };
-                    });
-                })).then(function (joinResults) {
-                    var unpacked = {};
-                    _.each(joinResults, function (result) {
-                        unpacked[result.name] = result.data;
-                    });
-                    return unpacked;
-                });
+            self.map = function (callback) {
+                return _.map(joins, _.bind(callback, self));
             };
+
+            self.isEmpty = function () {
+                return joins.length ? false : true;
+            };
+
+            self.get = function (name, result) {
+                var join = _.findWhere(joins, { resultsName: name });
+                var results = _.isArray(result) ? result : [result];
+                return ormy.query(
+                    'SELECT * FROM ' + join.table.name() +
+                    ' WHERE ' +
+                    _.map(results, function (result) {
+                        return join.foreignKey + ' = ?';
+                    }).join(' OR '),
+                    _.pluck(results, join.localKey)
+                );
+            };
+
+            // self.getAll = function (result) {
+            //     return Q.all(_.map(joins, function (join) {
+            //         return self.get(join.resultsName, result)
+            //         .then(function(results) {
+            //             return {
+            //                 name: join.resultsName,
+            //                 data: results
+            //             };
+            //         });
+            //     }))
+            //     .then(function (joinResults) {
+            //         var unpacked = {};
+            //         _.each(joinResults, function (result) {
+            //             unpacked[result.name] = result.data;
+            //         });
+            //         return unpacked;
+            //     });
+            // };
 
             return self;
         }());
@@ -79,6 +98,11 @@ module.exports = function (ormy, hidden) {
             });
         };
 
+        query.all = function () {
+            return query.get();
+
+        };
+
         query.get = function () {
             return hidden.createResults({
                 table: table,
@@ -89,12 +113,31 @@ module.exports = function (ormy, hidden) {
                     wheres.query(),
                     wheres.values()
                 ).then(function (results) {
-                    // TODO: REDUCE QUERIES BY GROUPING 1 PER TABLE
-                    return Q.all(_.map(results, function (result) {
-                        return leftJoins.getAll(result).then(function (joinResults) {
-                            return _.extend(result, joinResults);
+                    if(leftJoins.isEmpty()) {
+                        return results;
+                    }
+                    else {
+                        return Q.all(leftJoins.map(function (join) {
+                            return this.get(join.resultsName, results)
+                            .then(function (joinResults) {
+                                _.each(results, function (result, index) {
+                                    var matches = _.where(
+                                        joinResults,
+                                        _.object(
+                                            [join.foreignKey],
+                                            [result[join.localKey]]
+                                        )
+                                    );
+
+                                    if(!_.isEmpty(matches)) {
+                                        results[index][join.resultsName] = matches;
+                                    }
+                                });
+                            });
+                        })).then(function () {
+                            return results;
                         });
-                    }));
+                    }
                 })
             });
         };

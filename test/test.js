@@ -66,6 +66,17 @@ exports.find = function (test) {
     }).done();
 };
 
+exports.all = function (test) {
+    test.expect(1);
+    this.ormy('student').all().then(function (students) {
+        test.deepEqual(students, [
+            { id: 1, name: 'Bob' },
+            { id: 2, name: 'Mary' }
+        ]);
+        test.done();
+    }).done();
+};
+
 exports.whereFromTableObjectPassArray = function (test) {
     test.expect(1);
     this.ormy('student')
@@ -129,6 +140,38 @@ exports.withHasMany = function (test) {
                 { courseID: 2, studentID: 1 }
             ]
         });
+        test.done();
+    }).done();
+};
+
+exports.withHasManyUsingAll = function (test) {
+    test.expect(1);
+    this.ormy('student')
+    .primaryKey('id')
+    .hasMany({
+        methodName: 'enrollments',
+        tableName: 'enrollment',
+        foreignKey: 'studentID',
+        localKey: 'id'
+    })
+    .with('enrollments').all().then(function (students) {
+        test.deepEqual(students, [
+            {
+                id: 1,
+                name: 'Bob',
+                enrollments: [
+                    { courseID: 1, studentID: 1 },
+                    { courseID: 2, studentID: 1 }
+                ]
+            },
+            {
+                id: 2,
+                name: 'Mary',
+                enrollments: [
+                    { courseID: 1, studentID: 2 }
+                ]
+            }
+        ]);
         test.done();
     }).done();
 };
