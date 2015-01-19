@@ -49,6 +49,19 @@ exports.setUp = function (done) {
             tableName: 'enrollment',
             foreignKey: 'studentID',
             localKey: 'id'
+        })
+        .hasManyThrough({
+            methodName: 'courses',
+            pivot: {
+                tableName: 'enrollment',
+                foreignKey: 'studentID',
+                localKey: 'id'
+            },
+            endpoint: {
+                tableName: 'course',
+                foreignKey: 'courseID',
+                localKey: 'id'
+            }
         });
 
         that.enrollment = that.ormy('enrollment').hasOne({
@@ -194,6 +207,19 @@ exports.hasOneWith = function (test) {
                     name: 'Bob'
                 }
             }
+        ]);
+        test.done();
+    }).done();
+};
+
+exports.hasManyThrough = function (test) {
+    test.expect(1);
+    this.student.find(1).then(function (results) {
+        return this.courses();
+    }).then(function (courses) {
+        test.deepEqual(courses, [
+            { id: 1, name: 'Math' },
+            { id: 2, name: 'Biology' }
         ]);
         test.done();
     }).done();

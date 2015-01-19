@@ -23,6 +23,12 @@ module.exports = function (ormy, hidden) {
             return table;
         };
 
+        table.hasManyThrough = function (fig) {
+            fig.joinType = 'hasManyThrough';
+            relationships[fig.methodName] = fig;
+            return table;
+        };
+
         table.with = function (methodNames) {
             var methodNames = _.isArray(methodNames) ?
                 methodNames : _.toArray(arguments);

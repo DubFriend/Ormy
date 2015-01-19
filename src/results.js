@@ -25,6 +25,8 @@ module.exports = function (ormy, hidden) {
 	    			throw new Error('Must have allready loaded results');
 	    		}
 
+	    		console.log(relationship);
+
 	    		var uniqueKeys = _.unique(_.pluck(
 	    			_.isArray(resultData) ? resultData : [resultData],
 	    			relationship.localKey)
