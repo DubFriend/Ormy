@@ -122,9 +122,9 @@ module.exports = function (ormy, hidden) {
                                     );
 
                                     if(!_.isEmpty(matches)) {
-
                                         results[index][join.resultsName] =
-                                            join.joinType === 'hasOne' ? _.first(matches) : matches;
+                                            join.joinType === 'hasOne' ?
+                                                _.first(matches) : matches;
                                     }
                                 });
                             });
